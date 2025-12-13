@@ -65,7 +65,7 @@ public class PlayerController : MonoBehaviour
         if ((Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-            Debug.Log("점프!");
+            
         }
         
         // 물리 기반 이동 (중요: 이게 없으면 캐릭터가 안 움직임!)
@@ -90,7 +90,7 @@ public class PlayerController : MonoBehaviour
 		    // 충돌한 오브젝트가 "Ground" Tag를 가지고 있는지 확인
 		    if (collision.gameObject.CompareTag("Ground"))
 		    {
-		        Debug.Log("바닥에 착지!");
+		        
 		        isGrounded = true;
 		    }
 		}
@@ -100,7 +100,7 @@ public class PlayerController : MonoBehaviour
 		{
 		    if (collision.gameObject.CompareTag("Ground"))
 		    {
-		        Debug.Log("바닥에서 떨어짐");
+		        
 		        isGrounded = false;
 		    }
 		}

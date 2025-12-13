@@ -100,16 +100,35 @@ public class BulletDodge : MonoBehaviour
         }
         
         // 결승선 도착 확인
-        if (finishLine != null && playerController != null)
+        if (finishLine != null)
         {
-            float distanceToFinish = Vector2.Distance(
-                playerController.transform.position,
-                finishLine.position
-            );
+            Vector3 playerPosition = Vector3.zero;
+            bool playerFound = false;
             
-            if (distanceToFinish < finishLineDistance)
+            if (playerController != null)
             {
-                OnGameSuccess();
+                playerPosition = playerController.transform.position;
+                playerFound = true;
+            }
+            else
+            {
+                // PlayerController02를 사용하는 경우
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null)
+                {
+                    playerPosition = player.transform.position;
+                    playerFound = true;
+                }
+            }
+            
+            if (playerFound)
+            {
+                float distanceToFinish = Vector2.Distance(playerPosition, finishLine.position);
+                
+                if (distanceToFinish < finishLineDistance)
+                {
+                    OnGameSuccess();
+                }
             }
         }
     }
@@ -120,18 +139,40 @@ public class BulletDodge : MonoBehaviour
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player == null)
         {
+            // PlayerController 먼저 찾기
             playerController = FindObjectOfType<PlayerController>();
             if (playerController != null)
             {
                 Debug.Log("BulletDodge: PlayerController를 통해 플레이어를 찾았습니다.");
             }
+            else
+            {
+                // PlayerController02 찾기
+                PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+                if (playerController02 != null)
+                {
+                    // PlayerController02를 PlayerController로 캐스팅할 수 없으므로
+                    // null로 두고 플레이어 GameObject를 직접 사용
+                    Debug.Log("BulletDodge: PlayerController02를 통해 플레이어를 찾았습니다.");
+                }
+            }
         }
         else
         {
+            // PlayerController 먼저 찾기
             playerController = player.GetComponent<PlayerController>();
             if (playerController == null)
             {
-                Debug.LogWarning("BulletDodge: 플레이어 오브젝트에 PlayerController가 없습니다!");
+                // PlayerController02 찾기
+                PlayerController02 playerController02 = player.GetComponent<PlayerController02>();
+                if (playerController02 != null)
+                {
+                    Debug.Log("BulletDodge: PlayerController02를 통해 플레이어를 찾았습니다.");
+                }
+                else
+                {
+                    Debug.LogWarning("BulletDodge: 플레이어 오브젝트에 PlayerController 또는 PlayerController02가 없습니다!");
+                }
             }
         }
     }
@@ -350,6 +391,15 @@ public class BulletDodge : MonoBehaviour
         {
             playerController.SetCanMove(false);
         }
+        else
+        {
+            // PlayerController02 찾기
+            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            if (playerController02 != null)
+            {
+                playerController02.SetCanMove(false);
+            }
+        }
         
         // 모든 총알 제거
         ClearAllBullets();
@@ -382,6 +432,15 @@ public class BulletDodge : MonoBehaviour
         if (playerController != null)
         {
             playerController.SetCanMove(false);
+        }
+        else
+        {
+            // PlayerController02 찾기
+            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            if (playerController02 != null)
+            {
+                playerController02.SetCanMove(false);
+            }
         }
         
         // 모든 총알 제거

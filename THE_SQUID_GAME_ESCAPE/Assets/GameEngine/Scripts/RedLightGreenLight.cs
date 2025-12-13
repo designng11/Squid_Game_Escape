@@ -19,7 +19,7 @@ public class RedLightGreenLight : MonoBehaviour
     [SerializeField] private float maxGreenLightTime = 5f; // 최대 파란불 시간
     [SerializeField] private float minRedLightTime = 1f;   // 최소 빨간불 시간
     [SerializeField] private float maxRedLightTime = 3f;   // 최대 빨간불 시간
-    [SerializeField] private float movementThreshold = 0.01f; // 움직임 감지 임계값
+    [SerializeField] private float velocityThreshold = 0.1f; // 속도 감지 임계값 (이 값 이상이면 게임오버)
     [SerializeField] private float redLightDetectionDelay = 0.5f; // 빨간불로 변한 후 움직임 감지 시작 딜레이 (초)
     
     [Header("UI 설정")]
@@ -52,6 +52,9 @@ public class RedLightGreenLight : MonoBehaviour
     [SerializeField] private AudioClip greenLightSound; // 파란불 사운드
     [SerializeField] private AudioClip redLightSound;   // 빨간불 사운드
     [SerializeField] private AudioClip gameOverSound;    // 게임오버 사운드
+    [SerializeField] private bool adjustGreenLightSoundLength = true; // GreenLight 시간에 맞춰 오디오 길이 조절
+    [SerializeField] private float minPitch = 0.5f; // 최소 pitch (너무 느리게 재생 방지)
+    [SerializeField] private float maxPitch = 2.0f; // 최대 pitch (너무 빠르게 재생 방지)
     
     private GameState currentState = GameState.GreenLight;
     private float stateTimer = 0f;
@@ -337,18 +340,63 @@ public class RedLightGreenLight : MonoBehaviour
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player == null)
         {
+            // PlayerController 먼저 찾기
             playerController = FindObjectOfType<PlayerController>();
             if (playerController != null)
             {
                 Debug.Log("RedLightGreenLight: PlayerController를 통해 플레이어를 찾았습니다.");
             }
+            else
+            {
+                // PlayerController02 찾기
+                PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+                if (playerController02 != null)
+                {
+                    // PlayerController02를 PlayerController로 캐스팅할 수 없으므로
+                    // MonoBehaviour를 통해 접근하거나 별도 처리 필요
+                    // 일단 Rigidbody2D는 직접 찾을 수 있으므로 playerController는 null로 두고
+                    // playerRigidbody만 찾기
+                    playerRigidbody = playerController02.GetComponent<Rigidbody2D>();
+                    Debug.Log("RedLightGreenLight: PlayerController02를 통해 플레이어를 찾았습니다.");
+                }
+            }
         }
         else
         {
+            // PlayerController 먼저 찾기
             playerController = player.GetComponent<PlayerController>();
             if (playerController == null)
             {
-                Debug.LogWarning("RedLightGreenLight: 플레이어 오브젝트에 PlayerController가 없습니다!");
+                // PlayerController02 찾기
+                PlayerController02 playerController02 = player.GetComponent<PlayerController02>();
+                if (playerController02 != null)
+                {
+                    playerRigidbody = playerController02.GetComponent<Rigidbody2D>();
+                    Debug.Log("RedLightGreenLight: PlayerController02를 통해 플레이어를 찾았습니다.");
+                }
+                else
+                {
+                    Debug.LogWarning("RedLightGreenLight: 플레이어 오브젝트에 PlayerController 또는 PlayerController02가 없습니다!");
+                }
+            }
+        }
+        
+        // Rigidbody2D 찾기 (playerController가 있으면)
+        if (playerController != null && playerRigidbody == null)
+        {
+            playerRigidbody = playerController.GetComponent<Rigidbody2D>();
+        }
+        
+        // Rigidbody2D를 직접 찾기 (위에서 못 찾았으면)
+        if (playerRigidbody == null)
+        {
+            if (player != null)
+            {
+                playerRigidbody = player.GetComponent<Rigidbody2D>();
+            }
+            else
+            {
+                playerRigidbody = FindObjectOfType<Rigidbody2D>();
             }
         }
     }
@@ -386,6 +434,15 @@ public class RedLightGreenLight : MonoBehaviour
         // 상태 타이머 업데이트
         stateTimer += Time.deltaTime;
         
+        // GreenLight 오디오가 재생 중이고 시간이 끝나면 정지
+        if (currentState == GameState.GreenLight && adjustGreenLightSoundLength && audioSource != null && audioSource.isPlaying)
+        {
+            if (stateTimer >= nextStateChangeTime)
+            {
+                audioSource.Stop();
+            }
+        }
+        
         if (stateTimer >= nextStateChangeTime)
         {
             // 상태 전환
@@ -400,7 +457,7 @@ public class RedLightGreenLight : MonoBehaviour
         }
         
         // 빨간불일 때 움직임 감지 (딜레이 후)
-        if (currentState == GameState.RedLight && playerController != null)
+        if (currentState == GameState.RedLight)
         {
             // 빨간불로 변한 후 딜레이 시간이 지났는지 확인
             if (canDetectMovement)
@@ -418,17 +475,41 @@ public class RedLightGreenLight : MonoBehaviour
                     {
                         lastPlayerPosition = playerController.transform.position;
                     }
+                    else
+                    {
+                        // PlayerController02를 사용하는 경우
+                        GameObject player = GameObject.FindGameObjectWithTag("Player");
+                        if (player != null)
+                        {
+                            lastPlayerPosition = player.transform.position;
+                        }
+                    }
                 }
             }
         }
         
         // 결승선 도착 확인
-        if (finishLine != null && playerController != null)
+        if (finishLine != null)
         {
-            float distanceToFinish = Vector2.Distance(
-                playerController.transform.position, 
-                finishLine.position
-            );
+            Vector3 playerPos = Vector3.zero;
+            if (playerController != null)
+            {
+                playerPos = playerController.transform.position;
+            }
+            else
+            {
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null)
+                {
+                    playerPos = player.transform.position;
+                }
+                else
+                {
+                    return; // 플레이어를 찾을 수 없으면 리턴
+                }
+            }
+            
+            float distanceToFinish = Vector2.Distance(playerPos, finishLine.position);
             
             if (distanceToFinish < 1f) // 결승선 도착
             {
@@ -539,7 +620,7 @@ public class RedLightGreenLight : MonoBehaviour
         // 위치 추적 (게임이 활성화되어 있을 때만)
         if (isGameActive && statusCanvas != null)
         {
-            if (followPlayerX && playerController != null)
+            if (followPlayerX)
             {
                 UpdateSpritePosition();
             }
@@ -588,9 +669,25 @@ public class RedLightGreenLight : MonoBehaviour
         float targetWorldX = 0f;
         
         // 추적할 대상 결정
-        if (followPlayerX && playerController != null)
+        if (followPlayerX)
         {
-            targetWorldX = playerController.transform.position.x;
+            if (playerController != null)
+            {
+                targetWorldX = playerController.transform.position.x;
+            }
+            else
+            {
+                // PlayerController02를 사용하는 경우
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null)
+                {
+                    targetWorldX = player.transform.position.x;
+                }
+                else
+                {
+                    return; // 플레이어를 찾을 수 없으면 리턴
+                }
+            }
         }
         else if (followCameraX && targetCamera != null)
         {
@@ -665,7 +762,30 @@ public class RedLightGreenLight : MonoBehaviour
             }
             
             // 추적할 대상의 월드 위치
-            float targetWorldY = followPlayerX && playerController != null ? playerController.transform.position.y : targetCamera.transform.position.y;
+            float targetWorldY = 0f;
+            if (followPlayerX)
+            {
+                if (playerController != null)
+                {
+                    targetWorldY = playerController.transform.position.y;
+                }
+                else
+                {
+                    GameObject player = GameObject.FindGameObjectWithTag("Player");
+                    if (player != null)
+                    {
+                        targetWorldY = player.transform.position.y;
+                    }
+                    else
+                    {
+                        targetWorldY = targetCamera.transform.position.y;
+                    }
+                }
+            }
+            else
+            {
+                targetWorldY = targetCamera.transform.position.y;
+            }
             Vector3 targetWorldPos = new Vector3(targetWorldX, targetWorldY, 0);
             Vector3 screenPoint = targetCamera.WorldToScreenPoint(targetWorldPos);
             
@@ -743,8 +863,19 @@ public class RedLightGreenLight : MonoBehaviour
         // 다음 상태 변경 시간 설정
         if (newState == GameState.GreenLight)
         {
+            // 랜덤 시간 먼저 결정
             nextStateChangeTime = Random.Range(minGreenLightTime, maxGreenLightTime);
-            PlaySound(greenLightSound);
+            
+            // GreenLight 시간에 맞춰서 오디오 길이 조절
+            if (adjustGreenLightSoundLength && greenLightSound != null)
+            {
+                // 결정된 랜덤 시간에 맞춰서 오디오 pitch 조절
+                PlaySoundWithDuration(greenLightSound, nextStateChangeTime);
+            }
+            else
+            {
+                PlaySound(greenLightSound);
+            }
             
             // 파란불일 때 플레이어 이동 허용 및 움직임 감지 비활성화
             canDetectMovement = false;
@@ -752,9 +883,28 @@ public class RedLightGreenLight : MonoBehaviour
             {
                 playerController.SetCanMove(true);
             }
+            else
+            {
+                // PlayerController02 찾기
+                PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+                if (playerController02 != null)
+                {
+                    playerController02.SetCanMove(true);
+                }
+            }
         }
         else
         {
+            // GreenLight 오디오 정지 및 pitch 원래대로
+            if (adjustGreenLightSoundLength && audioSource != null)
+            {
+                if (audioSource.isPlaying)
+                {
+                    audioSource.Stop();
+                }
+                audioSource.pitch = 1.0f; // pitch를 원래대로 되돌림
+            }
+            
             nextStateChangeTime = Random.Range(minRedLightTime, maxRedLightTime);
             PlaySound(redLightSound);
             
@@ -768,6 +918,15 @@ public class RedLightGreenLight : MonoBehaviour
                 lastPlayerPosition = playerController.transform.position;
                 // 이동을 완전히 막지는 않고 감지만 함 (게임의 재미를 위해)
                 // playerController.SetCanMove(false); // 이 줄을 활성화하면 빨간불일 때 완전히 움직임을 막음
+            }
+            else
+            {
+                // PlayerController02를 사용하는 경우
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null)
+                {
+                    lastPlayerPosition = player.transform.position;
+                }
             }
         }
         
@@ -831,36 +990,44 @@ public class RedLightGreenLight : MonoBehaviour
         }
     }
     
-    // 플레이어 움직임 감지
+    // 플레이어 움직임 감지 (속도 기반)
     void CheckPlayerMovement()
     {
-        if (playerController == null)
-        {
-            return;
-        }
-        
-        Vector3 currentPosition = playerController.transform.position;
-        
-        // 위치 변화 확인
-        float positionChange = Vector3.Distance(currentPosition, lastPlayerPosition);
-        
-        // 속도 확인 (Rigidbody2D가 있는 경우)
+        // Rigidbody2D를 통해 속도 확인
         if (playerRigidbody != null)
         {
-            float velocityMagnitude = playerRigidbody.linearVelocity.magnitude;
+            // 수평 속도만 확인 (점프는 허용)
+            float horizontalVelocity = Mathf.Abs(playerRigidbody.linearVelocity.x);
             
-            // 위치 변화나 속도가 임계값을 넘으면 움직임으로 간주
-            if (positionChange > movementThreshold || velocityMagnitude > movementThreshold)
+            // 디버그 로그 (필요시 주석 해제)
+            // Debug.Log($"RedLightGreenLight: 현재 수평 속도 = {horizontalVelocity}, 임계값 = {velocityThreshold}");
+            
+            // 수평 속도가 임계값을 넘으면 게임오버
+            if (horizontalVelocity > velocityThreshold)
             {
+                Debug.Log($"RedLightGreenLight: 속도 감지! 수평 속도 = {horizontalVelocity}, 임계값 = {velocityThreshold}");
                 OnPlayerMoved();
             }
         }
         else
         {
-            // Rigidbody2D가 없으면 위치 변화만 확인
-            if (positionChange > movementThreshold)
+            // Rigidbody2D를 다시 찾기 시도
+            if (playerController != null)
             {
-                OnPlayerMoved();
+                playerRigidbody = playerController.GetComponent<Rigidbody2D>();
+            }
+            else
+            {
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null)
+                {
+                    playerRigidbody = player.GetComponent<Rigidbody2D>();
+                }
+            }
+            
+            if (playerRigidbody == null)
+            {
+                Debug.LogWarning("RedLightGreenLight: Rigidbody2D를 찾을 수 없어 속도 기반 감지를 할 수 없습니다!");
             }
         }
     }
@@ -887,6 +1054,15 @@ public class RedLightGreenLight : MonoBehaviour
         if (playerController != null)
         {
             playerController.SetCanMove(false);
+        }
+        else
+        {
+            // PlayerController02 찾기
+            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            if (playerController02 != null)
+            {
+                playerController02.SetCanMove(false);
+            }
         }
         
         // 일정 시간 후 씬 전환
@@ -978,6 +1154,15 @@ public class RedLightGreenLight : MonoBehaviour
         {
             playerController.SetCanMove(false);
         }
+        else
+        {
+            // PlayerController02 찾기
+            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            if (playerController02 != null)
+            {
+                playerController02.SetCanMove(false);
+            }
+        }
         
         // 일정 시간 후 씬 전환
         StartCoroutine(GameOverSequence());
@@ -998,6 +1183,15 @@ public class RedLightGreenLight : MonoBehaviour
         if (playerController != null)
         {
             playerController.SetCanMove(false);
+        }
+        else
+        {
+            // PlayerController02 찾기
+            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            if (playerController02 != null)
+            {
+                playerController02.SetCanMove(false);
+            }
         }
         
         // 다음 씬으로 이동
@@ -1052,6 +1246,38 @@ public class RedLightGreenLight : MonoBehaviour
         if (audioSource != null && clip != null)
         {
             audioSource.PlayOneShot(clip);
+        }
+    }
+    
+    // 지정된 시간에 맞춰서 오디오 재생 (pitch 조절)
+    void PlaySoundWithDuration(AudioClip clip, float targetDuration)
+    {
+        if (audioSource != null && clip != null)
+        {
+            // 오디오 클립의 원본 길이
+            float clipLength = clip.length;
+            
+            // 목표 시간에 맞춰서 pitch 계산
+            // pitch = 원본길이 / 목표길이
+            // 예: 오디오가 3초인데 5초에 맞추려면 pitch = 3/5 = 0.6 (느리게 재생)
+            // 예: 오디오가 3초인데 2초에 맞추려면 pitch = 3/2 = 1.5 (빠르게 재생)
+            float calculatedPitch = clipLength / targetDuration;
+            
+            // pitch 범위 제한
+            float finalPitch = Mathf.Clamp(calculatedPitch, minPitch, maxPitch);
+            
+            // 기존 재생 중인 오디오 정지
+            if (audioSource.isPlaying)
+            {
+                audioSource.Stop();
+            }
+            
+            // pitch 설정 및 재생
+            audioSource.pitch = finalPitch;
+            audioSource.clip = clip;
+            audioSource.Play();
+            
+            Debug.Log($"RedLightGreenLight: 오디오 재생 - 원본 길이: {clipLength}초, 목표 길이: {targetDuration}초, Pitch: {finalPitch}");
         }
     }
     

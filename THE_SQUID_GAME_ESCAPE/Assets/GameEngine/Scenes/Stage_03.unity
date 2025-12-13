@@ -1063,7 +1063,7 @@ Transform:
   m_GameObject: {fileID: 961739749}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.945719, y: -1.9312538, z: -9.863584}
+  m_LocalPosition: {x: -1.9380901, y: -1.9312838, z: -9.863584}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1284,7 +1284,7 @@ MonoBehaviour:
   gameOverDelay: 2
   gameOverSceneName: GameOver
   successSceneName: Stage_01
-  bulletSpawnSound: {fileID: 0}
+  bulletSpawnSound: {fileID: 8300000, guid: 54507ff8a9ef71d49a21e22b71a54045, type: 3}
   hitSound: {fileID: 0}
   successSound: {fileID: 0}
 --- !u!4 &1073734107
@@ -1524,7 +1524,7 @@ Transform:
   m_GameObject: {fileID: 1449721748}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -7.163521, y: -2.4580991, z: -9.863584}
+  m_LocalPosition: {x: -7.163307, y: -2.4581113, z: -9.863584}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1922,7 +1922,7 @@ Transform:
   m_GameObject: {fileID: 1817262583}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 32.57, y: -1.9, z: -0.68321353}
+  m_LocalPosition: {x: 31.8, y: -1.9, z: -0.68321353}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2080,7 +2080,7 @@ GameObject:
   - component: {fileID: 1881164901}
   - component: {fileID: 1881164900}
   - component: {fileID: 1881164899}
-  - component: {fileID: 1881164898}
+  - component: {fileID: 1881164902}
   m_Layer: 0
   m_Name: Test_player
   m_TagString: Player
@@ -2103,21 +2103,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1638238640}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1881164898
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1881164896}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c785c2ef4526e4a44a32b96741b6c6de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 5
-  jumpForce: 15
-  gravityScale: 3
 --- !u!70 &1881164899
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -2237,6 +2222,24 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1881164902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1881164896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ecbdc5d00e3a9a4b9db930095650010, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 5
+  jumpForce: 15
+  gravityScale: 3
+  acceleration: 20
+  friction: 0.535
+  minVelocityThreshold: 0.01
 --- !u!1 &1947323938
 GameObject:
   m_ObjectHideFlags: 0
