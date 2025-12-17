@@ -35,7 +35,7 @@ public class NPC : MonoBehaviour
             if (player == null)
             {
                 // Player 태그가 없으면 PlayerController를 가진 오브젝트 찾기
-                PlayerController playerController = FindObjectOfType<PlayerController>();
+                PlayerController playerController = FindFirstObjectByType<PlayerController>();
                 if (playerController != null)
                 {
                     playerTransform = playerController.transform;
@@ -43,7 +43,17 @@ public class NPC : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("NPC: 플레이어를 찾을 수 없습니다! 플레이어 오브젝트에 'Player' 태그를 설정하거나 PlayerController를 추가해주세요.");
+                    // PlayerController02 찾기
+                    PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
+                    if (playerController02 != null)
+                    {
+                        playerTransform = playerController02.transform;
+                        Debug.Log("NPC: PlayerController02를 통해 플레이어를 찾았습니다.");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("NPC: 플레이어를 찾을 수 없습니다! 플레이어 오브젝트에 'Player' 태그를 설정하거나 PlayerController/PlayerController02를 추가해주세요.");
+                    }
                 }
             }
             else

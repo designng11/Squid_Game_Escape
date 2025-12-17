@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - Ground
+  - DeadlyGround
+  - Plate
   layers:
   - Default
   - TransparentFX
@@ -51,7 +53,7 @@ TagManager:
   - name: Player
     uniqueID: 1365557051
     locked: 0
-  - name: New Layer 5
+  - name: Object
     uniqueID: 2977643677
     locked: 0
   - name: Entities

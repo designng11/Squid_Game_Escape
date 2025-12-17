@@ -24,6 +24,7 @@ public class BulletDodge : MonoBehaviour
     [SerializeField] private Transform finishLine; // 결승선
     [SerializeField] private float finishLineDistance = 1f; // 결승선 도착 거리
     [SerializeField] private bool startOnStart = true; // 시작 시 자동 시작
+    [SerializeField] private string deadlyGroundTag = "DeadlyGround"; // 바닥 태그 (닿으면 게임오버)
     
     [Header("Game Over Settings")]
     [SerializeField] private GameObject gameOverPanel; // 게임오버 패널
@@ -140,7 +141,7 @@ public class BulletDodge : MonoBehaviour
         if (player == null)
         {
             // PlayerController 먼저 찾기
-            playerController = FindObjectOfType<PlayerController>();
+            playerController = FindFirstObjectByType<PlayerController>();
             if (playerController != null)
             {
                 Debug.Log("BulletDodge: PlayerController를 통해 플레이어를 찾았습니다.");
@@ -148,7 +149,7 @@ public class BulletDodge : MonoBehaviour
             else
             {
                 // PlayerController02 찾기
-                PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+                PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
                 if (playerController02 != null)
                 {
                     // PlayerController02를 PlayerController로 캐스팅할 수 없으므로
@@ -183,7 +184,7 @@ public class BulletDodge : MonoBehaviour
         targetCamera = Camera.main;
         if (targetCamera == null)
         {
-            targetCamera = FindObjectOfType<Camera>();
+            targetCamera = FindFirstObjectByType<Camera>();
         }
     }
     
@@ -362,10 +363,92 @@ public class BulletDodge : MonoBehaviour
         // 총알 설정
         bulletScript.Initialize(bulletSpeed, this);
         
+        // 총알 경로 시각화
+        DrawBulletPath(bullet, spawnPosition);
+        
         // 사운드 재생
         PlaySound(bulletSpawnSound);
         
         Debug.Log($"BulletDodge: 총알 생성! 위치: {spawnPosition}");
+    }
+
+    // 총알 경로 표시 (LineRenderer)
+    void DrawBulletPath(GameObject bullet, Vector3 spawnPosition)
+    {
+        if (bullet == null)
+        {
+            return;
+        }
+
+        // 경로 길이 계산 (카메라 왼쪽 영역까지)
+        // 기본 길이
+        float pathLength = 50f;
+        if (targetCamera != null)
+        {
+            // 화면 왼쪽을 훨씬 넘어가도록 여유를 둠 (-0.5f)
+            Vector3 leftBound = targetCamera.ViewportToWorldPoint(new Vector3(-0.5f, 0.5f, targetCamera.nearClipPlane));
+            pathLength = Mathf.Abs(spawnPosition.x - leftBound.x) + 20f;
+        }
+
+        Vector3 endPos = spawnPosition + Vector3.left * pathLength;
+        endPos.z = spawnPosition.z;
+
+        // LineRenderer 설정
+        LineRenderer line = bullet.GetComponent<LineRenderer>();
+        if (line == null)
+        {
+            line = bullet.AddComponent<LineRenderer>();
+        }
+
+        line.positionCount = 2;
+        line.useWorldSpace = true;
+        line.startWidth = 0.05f;
+        line.endWidth = 0.05f;
+
+        // 머티리얼/색상 설정
+        if (line.material == null)
+        {
+            line.material = new Material(Shader.Find("Sprites/Default"));
+        }
+        line.startColor = new Color(1f, 1f, 1f, 0.8f);
+        line.endColor = new Color(1f, 1f, 1f, 0.2f);
+
+        line.SetPosition(0, spawnPosition);
+        line.SetPosition(1, endPos);
+
+        // 라인 빠른 페이드아웃
+        StartCoroutine(FadeAndDisableLine(line, .5f));
+    }
+
+    // LineRenderer를 빠르게 페이드아웃 후 숨김
+    IEnumerator FadeAndDisableLine(LineRenderer line, float duration)
+    {
+        if (line == null)
+        {
+            yield break;
+        }
+
+        float elapsed = 0f;
+        Color startColor = line.startColor;
+        Color endColor = line.endColor;
+
+        while (elapsed < duration && line != null)
+        {
+            float t = elapsed / duration;
+            Color cStart = Color.Lerp(startColor, new Color(startColor.r, startColor.g, startColor.b, 0f), t);
+            Color cEnd = Color.Lerp(endColor, new Color(endColor.r, endColor.g, endColor.b, 0f), t);
+            line.startColor = cStart;
+            line.endColor = cEnd;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (line != null)
+        {
+            line.startColor = new Color(startColor.r, startColor.g, startColor.b, 0f);
+            line.endColor = new Color(endColor.r, endColor.g, endColor.b, 0f);
+            line.enabled = false;
+        }
     }
     
     // 총알이 플레이어와 충돌
@@ -386,18 +469,20 @@ public class BulletDodge : MonoBehaviour
         // 게임오버 UI 표시
         ShowGameOver();
         
-        // 플레이어 이동 비활성화
+        // 플레이어 이동 비활성화 및 Dead 파라미터 설정
         if (playerController != null)
         {
             playerController.SetCanMove(false);
+            playerController.SetDead(true);
         }
         else
         {
             // PlayerController02 찾기
-            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
             if (playerController02 != null)
             {
                 playerController02.SetCanMove(false);
+                playerController02.SetDead(true);
             }
         }
         
@@ -410,6 +495,53 @@ public class BulletDodge : MonoBehaviour
             SetupGameOverCanvas();
         }
         
+        // 일정 시간 후 씬 전환
+        StartCoroutine(GameOverSequence());
+    }
+
+    // 플레이어가 DeadlyGround에 닿았을 때 게임오버
+    public void OnPlayerHitDeadlyGround()
+    {
+        if (isGameOver)
+        {
+            return;
+        }
+
+        Debug.Log("BulletDodge: 플레이어가 DeadlyGround에 닿았습니다! 게임오버!");
+        isGameOver = true;
+        isGameActive = false;
+
+        // 사운드 재생
+        PlaySound(hitSound);
+
+        // 플레이어 이동 비활성화 및 Dead 파라미터 설정
+        if (playerController != null)
+        {
+            playerController.SetCanMove(false);
+            playerController.SetDead(true);
+        }
+        else
+        {
+            PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
+            if (playerController02 != null)
+            {
+                playerController02.SetCanMove(false);
+                playerController02.SetDead(true);
+            }
+        }
+
+        // 게임오버 UI 표시
+        ShowGameOver();
+
+        // 모든 총알 제거
+        ClearAllBullets();
+
+        // 게임오버 Canvas 찾기 (아직 찾지 못했으면)
+        if (gameOverCanvas == null)
+        {
+            SetupGameOverCanvas();
+        }
+
         // 일정 시간 후 씬 전환
         StartCoroutine(GameOverSequence());
     }
@@ -436,7 +568,7 @@ public class BulletDodge : MonoBehaviour
         else
         {
             // PlayerController02 찾기
-            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
             if (playerController02 != null)
             {
                 playerController02.SetCanMove(false);

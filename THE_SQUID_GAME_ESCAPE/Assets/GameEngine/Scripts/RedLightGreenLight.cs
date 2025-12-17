@@ -156,7 +156,7 @@ public class RedLightGreenLight : MonoBehaviour
             targetCamera = Camera.main;
             if (targetCamera == null)
             {
-                targetCamera = FindObjectOfType<Camera>();
+                targetCamera = FindFirstObjectByType<Camera>();
             }
         }
     }
@@ -341,7 +341,7 @@ public class RedLightGreenLight : MonoBehaviour
         if (player == null)
         {
             // PlayerController 먼저 찾기
-            playerController = FindObjectOfType<PlayerController>();
+            playerController = FindFirstObjectByType<PlayerController>();
             if (playerController != null)
             {
                 Debug.Log("RedLightGreenLight: PlayerController를 통해 플레이어를 찾았습니다.");
@@ -349,7 +349,7 @@ public class RedLightGreenLight : MonoBehaviour
             else
             {
                 // PlayerController02 찾기
-                PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+                PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
                 if (playerController02 != null)
                 {
                     // PlayerController02를 PlayerController로 캐스팅할 수 없으므로
@@ -396,7 +396,7 @@ public class RedLightGreenLight : MonoBehaviour
             }
             else
             {
-                playerRigidbody = FindObjectOfType<Rigidbody2D>();
+                playerRigidbody = FindFirstObjectByType<Rigidbody2D>();
             }
         }
     }
@@ -886,7 +886,7 @@ public class RedLightGreenLight : MonoBehaviour
             else
             {
                 // PlayerController02 찾기
-                PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+                PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
                 if (playerController02 != null)
                 {
                     playerController02.SetCanMove(true);
@@ -1050,18 +1050,20 @@ public class RedLightGreenLight : MonoBehaviour
         // 게임오버 UI 표시
         ShowGameOver();
         
-        // 플레이어 이동 비활성화
+        // 플레이어 이동 비활성화 및 Dead 파라미터 설정
         if (playerController != null)
         {
             playerController.SetCanMove(false);
+            playerController.SetDead(true);
         }
         else
         {
             // PlayerController02 찾기
-            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
             if (playerController02 != null)
             {
                 playerController02.SetCanMove(false);
+                playerController02.SetDead(true);
             }
         }
         
@@ -1099,7 +1101,7 @@ public class RedLightGreenLight : MonoBehaviour
         }
         
         // Timer UI 숨기기
-        RedLightGreenLightTimer timer = FindObjectOfType<RedLightGreenLightTimer>();
+        RedLightGreenLightTimer timer = FindFirstObjectByType<RedLightGreenLightTimer>();
         if (timer != null)
         {
             timer.HideTimer();
@@ -1149,18 +1151,20 @@ public class RedLightGreenLight : MonoBehaviour
         // 게임오버 UI 표시 (시간초과 메시지)
         ShowGameOver(timeUpMessage);
         
-        // 플레이어 이동 비활성화
+        // 플레이어 이동 비활성화 및 Dead 파라미터 설정
         if (playerController != null)
         {
             playerController.SetCanMove(false);
+            playerController.SetDead(true);
         }
         else
         {
             // PlayerController02 찾기
-            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
             if (playerController02 != null)
             {
                 playerController02.SetCanMove(false);
+                playerController02.SetDead(true);
             }
         }
         
@@ -1187,7 +1191,7 @@ public class RedLightGreenLight : MonoBehaviour
         else
         {
             // PlayerController02 찾기
-            PlayerController02 playerController02 = FindObjectOfType<PlayerController02>();
+            PlayerController02 playerController02 = FindFirstObjectByType<PlayerController02>();
             if (playerController02 != null)
             {
                 playerController02.SetCanMove(false);

@@ -18,7 +18,7 @@ public class Bullet : MonoBehaviour
         targetCamera = Camera.main;
         if (targetCamera == null)
         {
-            targetCamera = FindObjectOfType<Camera>();
+            targetCamera = FindFirstObjectByType<Camera>();
         }
     }
     

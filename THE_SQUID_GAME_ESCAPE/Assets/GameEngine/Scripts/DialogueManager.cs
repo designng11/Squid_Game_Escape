@@ -175,7 +175,7 @@ public class DialogueManager : MonoBehaviour
         }
         
         // 3. Canvas의 직접 자식에서 Button과 Text/TextMeshProUGUI를 가진 활성화된 패널 찾기
-        Canvas[] allCanvases = FindObjectsOfType<Canvas>(true);
+        Canvas[] allCanvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         
         foreach (Canvas canvas in allCanvases)
         {
@@ -216,7 +216,7 @@ public class DialogueManager : MonoBehaviour
         }
         
         // 4. 추가로 모든 활성화된 GameObject 중에서 Button과 Text를 가진 패널 찾기 (최후의 수단)
-        GameObject[] allObjects = FindObjectsOfType<GameObject>();
+        GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
         foreach (GameObject obj in allObjects)
         {
             if (obj.activeSelf && obj.transform.parent != null && obj.transform.parent.GetComponent<Canvas>() != null)
@@ -273,7 +273,7 @@ public class DialogueManager : MonoBehaviour
         // 3. 이름으로 찾지 못하면 Canvas에서 찾기 (비활성화된 것도 찾을 수 있음)
         if (foundPanel == null)
         {
-            Canvas[] allCanvases = FindObjectsOfType<Canvas>(true);
+            Canvas[] allCanvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (Canvas canvas in allCanvases)
             {
                 // Canvas의 모든 자식 검색 (비활성화된 것도 포함)
@@ -363,10 +363,19 @@ public class DialogueManager : MonoBehaviour
         isTyping = false;
         
         // 플레이어 이동 활성화
-        PlayerController player = FindObjectOfType<PlayerController>();
+        PlayerController player = FindFirstObjectByType<PlayerController>();
         if (player != null)
         {
             player.SetCanMove(true);
+        }
+        else
+        {
+            // PlayerController02 찾기
+            PlayerController02 player02 = FindFirstObjectByType<PlayerController02>();
+            if (player02 != null)
+            {
+                player02.SetCanMove(true);
+            }
         }
         
         // 대화 상태 초기화
@@ -400,10 +409,19 @@ public class DialogueManager : MonoBehaviour
         SetSpeakerName(speakerName);
         
         // 플레이어 이동 비활성화
-        PlayerController player = FindObjectOfType<PlayerController>();
+        PlayerController player = FindFirstObjectByType<PlayerController>();
         if (player != null)
         {
             player.SetCanMove(false);
+        }
+        else
+        {
+            // PlayerController02 찾기
+            PlayerController02 player02 = FindFirstObjectByType<PlayerController02>();
+            if (player02 != null)
+            {
+                player02.SetCanMove(false);
+            }
         }
         
         DisplayNextDialogue();
@@ -511,10 +529,19 @@ public class DialogueManager : MonoBehaviour
         dialoguePanel.SetActive(false);
         
         // 플레이어 이동 활성화
-        PlayerController player = FindObjectOfType<PlayerController>();
+        PlayerController player = FindFirstObjectByType<PlayerController>();
         if (player != null)
         {
             player.SetCanMove(true);
+        }
+        else
+        {
+            // PlayerController02 찾기
+            PlayerController02 player02 = FindFirstObjectByType<PlayerController02>();
+            if (player02 != null)
+            {
+                player02.SetCanMove(true);
+            }
         }
         
         // 다음 씬으로 이동
@@ -526,7 +553,7 @@ public class DialogueManager : MonoBehaviour
             }
             else
             {
-                SceneLoader sceneLoader = FindObjectOfType<SceneLoader>();
+                SceneLoader sceneLoader = FindFirstObjectByType<SceneLoader>();
                 if (sceneLoader != null)
                 {
                     sceneLoader.LoadSceneWithFade(nextSceneName);

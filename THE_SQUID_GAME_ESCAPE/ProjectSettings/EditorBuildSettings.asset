@@ -12,8 +12,14 @@ EditorBuildSettings:
     path: Assets/GameEngine/Scenes/LoadingScene.unity
     guid: c304a472892713d4caa80372c6f46046
   - enabled: 1
-    path: Assets/GameEngine/Scenes/GameOver.unity
+    path: Assets/GameEngine/Scenes/GameOver_stage02.unity
     guid: a83318c3e6ffdb04287edf173e2d17a4
+  - enabled: 1
+    path: Assets/GameEngine/Scenes/GameOver_stage03.unity
+    guid: df666a76f3026b544a39e4809a076fe0
+  - enabled: 1
+    path: Assets/GameEngine/Scenes/GameOver_stage04.unity
+    guid: 8368425ee84ad5546aa488b0b5d13adc
   - enabled: 1
     path: Assets/GameEngine/Scenes/Stage_01.unity
     guid: a86c43588ed0f3a468a8784bea48f899
@@ -23,6 +29,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/GameEngine/Scenes/Stage_03.unity
     guid: 7464666e357828b4c83422229bf17f0a
+  - enabled: 1
+    path: Assets/GameEngine/Scenes/Stage_04.unity
+    guid: 703b4695c9e01334f9a3192b4c9ad293
+  - enabled: 1
+    path: Assets/GameEngine/Scenes/EndingMenu.unity
+    guid: 272e64ef7b5f6d848a9b72350eb01c1d
+  - enabled: 1
+    path: Assets/GameEngine/Scenes/Ending_O.unity
+    guid: 193b23fd2fbb65a44abe022f91fc2477
+  - enabled: 1
+    path: Assets/GameEngine/Scenes/Ending_X.unity
+    guid: 03ad5c1b6936cdb45bf0fefa55f259a1
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

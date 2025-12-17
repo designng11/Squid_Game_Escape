@@ -75,6 +75,12 @@ public class PlayerController02 : MonoBehaviour
         if ((Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            
+            // 점프 애니메이션 트리거
+            if (animator != null)
+            {
+                animator.SetTrigger("Jump");
+            }
         }
         
         // 관성 기반 이동
@@ -126,20 +132,67 @@ public class PlayerController02 : MonoBehaviour
         canMove = value;
     }
     
+    // Dead 파라미터 설정 (GameOver 상태에서 사용)
+    public void SetDead(bool value)
+    {
+        if (animator != null)
+        {
+            animator.SetBool("Dead", value);
+        }
+    }
+    
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // 충돌한 오브젝트가 "Ground" Tag를 가지고 있는지 확인
-        if (collision.gameObject.CompareTag("Ground"))
+        // 충돌한 오브젝트가 "Ground" 또는 "Plate" Tag를 가지고 있는지 확인 (점프 가능)
+        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Plate"))
         {
             isGrounded = true;
+        }
+        
+        // 유리판 게임: 플레이트 위에 올라갔을 때
+        if (collision.gameObject.CompareTag("Plate"))
+        {
+            GlassBridgeGame glassBridgeGame = FindFirstObjectByType<GlassBridgeGame>();
+            if (glassBridgeGame != null)
+            {
+                glassBridgeGame.OnPlayerEnterPlate(collision.gameObject);
+            }
+        }
+        
+        // 유리판 게임: 바닥에 닿으면 죽음
+        if (collision.gameObject.CompareTag("DeadlyGround"))
+        {
+            GlassBridgeGame glassBridgeGame = FindFirstObjectByType<GlassBridgeGame>();
+            if (glassBridgeGame != null)
+            {
+                glassBridgeGame.OnPlayerHitGround();
+            }
+
+            // 총알 피하기 게임: DeadlyGround 게임오버
+            BulletDodge bulletDodge = FindFirstObjectByType<BulletDodge>();
+            if (bulletDodge != null)
+            {
+                bulletDodge.OnPlayerHitDeadlyGround();
+            }
         }
     }
 
     void OnCollisionExit2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Ground"))
+        // Ground 또는 Plate에서 떨어졌을 때 isGrounded 해제
+        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Plate"))
         {
             isGrounded = false;
+        }
+        
+        // 유리판 게임: 플레이트에서 내려갔을 때
+        if (collision.gameObject.CompareTag("Plate"))
+        {
+            GlassBridgeGame glassBridgeGame = FindFirstObjectByType<GlassBridgeGame>();
+            if (glassBridgeGame != null)
+            {
+                glassBridgeGame.OnPlayerExitPlate(collision.gameObject);
+            }
         }
     }
 }

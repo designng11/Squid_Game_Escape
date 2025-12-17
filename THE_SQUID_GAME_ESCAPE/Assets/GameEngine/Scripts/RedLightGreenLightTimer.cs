@@ -179,7 +179,7 @@ public class RedLightGreenLightTimer : MonoBehaviour
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player == null)
         {
-            PlayerController playerController = FindObjectOfType<PlayerController>();
+            PlayerController playerController = FindFirstObjectByType<PlayerController>();
             if (playerController != null)
             {
                 playerTransform = playerController.transform;
@@ -203,7 +203,7 @@ public class RedLightGreenLightTimer : MonoBehaviour
         targetCamera = Camera.main;
         if (targetCamera == null)
         {
-            targetCamera = FindObjectOfType<Camera>();
+            targetCamera = FindFirstObjectByType<Camera>();
         }
     }
     

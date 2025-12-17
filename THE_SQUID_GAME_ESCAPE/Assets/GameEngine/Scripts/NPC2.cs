@@ -66,7 +66,7 @@ public class NPC2 : MonoBehaviour
             if (player == null)
             {
                 // Player 태그가 없으면 PlayerController를 가진 오브젝트 찾기
-                PlayerController playerController = FindObjectOfType<PlayerController>();
+                PlayerController playerController = FindFirstObjectByType<PlayerController>();
                 if (playerController != null)
                 {
                     playerTransform = playerController.transform;
@@ -267,7 +267,7 @@ public class NPC2 : MonoBehaviour
         }
         else
         {
-            SceneLoader sceneLoader = FindObjectOfType<SceneLoader>();
+            SceneLoader sceneLoader = FindFirstObjectByType<SceneLoader>();
             if (sceneLoader != null)
             {
                 sceneLoader.LoadSceneWithFade(nextSceneName);
